@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'methadone'
+require 'rcompile.rb'
+
+class App
+  include Methadone::Main
+  include Methadone::CLILogging
+
+  options = {
+    gems_with_fonts: [],
+    release_dir: File.join(Dir.pwd, 'html'),
+    asset_dir: File.join(Dir.pwd, 'public/assets'),
+    force: false
+  }
+  defaults_from_config_file(File.join(Dir.pwd,'.rcompile.rc'), options)
+
+  main do
+    RCompile::Compiler.new(options).compile
+  end
+
+  version RCompile::VERSION
+  use_log_level_option
+  on("--verbose", "Be verbose")
+  on("--fail_on_error", "Fail immediately on error")
+  go!
+end
