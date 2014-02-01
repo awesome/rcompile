@@ -62,7 +62,7 @@ module RCompile
       command_name = parse_caller(caller(1).first)
       begin
         success = sh(command) == 0
-        puts command.green if success && options[:verbose]
+        puts command_name.green if success
       rescue
         puts "#{command_name} failed to run".red
       end

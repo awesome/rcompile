@@ -8,13 +8,9 @@ Add this line to your application's Gemfile:
 
     gem 'rcompile'
 
-Add the following to your rake file
-
-        gem 'rcompile'
-
 And then execute:
 
-    $ bundle
+    $ bundle exec rcompile
 
 Or install it yourself as:
 
