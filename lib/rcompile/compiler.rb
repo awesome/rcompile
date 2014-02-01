@@ -131,7 +131,7 @@ module RCompile
     end
 
     def download_html
-      exec 'wget -H -r -l 10 -k -p -P html -nH localhost:3311'
+      exec 'wget -H -r -l 10 -k -p -D localhost -P html -nH localhost:3311'
     end
 
     def prettify
