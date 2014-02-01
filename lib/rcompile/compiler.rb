@@ -1,3 +1,5 @@
+require 'methadone'
+
 module RCompile
   using RCompile::Colorize
 
