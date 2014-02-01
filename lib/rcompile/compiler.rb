@@ -1,9 +1,53 @@
 require 'methadone'
+require 'nokogiri'
 
 module RCompile
   using RCompile::Colorize
 
   class Compiler
+    XSL = <<-EOXSL
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:param name="indent-increment" select="'  '"/>
+  <xsl:template name="newline">
+    <xsl:text disable-output-escaping="yes">
+    </xsl:text>
+  </xsl:template>
+  <xsl:template match="comment() | processing-instruction()">
+    <xsl:param name="indent" select="''"/>
+    <xsl:call-template name="newline"/>
+    <xsl:value-of select="$indent"/>
+    <xsl:copy />
+  </xsl:template>
+  <xsl:template match="text()">
+    <xsl:param name="indent" select="''"/>
+    <xsl:call-template name="newline"/>
+    <xsl:value-of select="$indent"/>
+    <xsl:value-of select="normalize-space(.)"/>
+  </xsl:template>
+  <xsl:template match="text()[normalize-space(.)='']"/>
+  <xsl:template match="*">
+    <xsl:param name="indent" select="''"/>
+    <xsl:call-template name="newline"/>
+    <xsl:value-of select="$indent"/>
+      <xsl:choose>
+       <xsl:when test="count(child::*) > 0">
+        <xsl:copy>
+         <xsl:copy-of select="@*"/>
+         <xsl:apply-templates select="*|text()">
+           <xsl:with-param name="indent" select="concat ($indent, $indent-increment)"/>
+         </xsl:apply-templates>
+         <xsl:call-template name="newline"/>
+         <xsl:value-of select="$indent"/>
+        </xsl:copy>
+       </xsl:when>
+       <xsl:otherwise>
+        <xsl:copy-of select="."/>
+       </xsl:otherwise>
+     </xsl:choose>
+  </xsl:template>
+</xsl:stylesheet>
+    EOXSL
+
     include Methadone::CLILogging
     include Methadone::SH
 
@@ -17,8 +61,8 @@ module RCompile
     def exec(command)
       command_name = parse_caller(caller(1).first)
       begin
-        success = sh command
-        puts command.green if success && verbose
+        success = sh(command) == 0
+        puts command.green if success && options[:verbose]
       rescue
         puts "#{command_name} failed to run".red
       end
@@ -33,10 +77,6 @@ module RCompile
       if /^(.+?):(\d+)(?::in `(.*)')?/ =~ at
         Regexp.last_match[3]
       end
-    end
-
-    def run_task(verbose)
-      compile
     end
 
     def compile
@@ -100,7 +140,13 @@ module RCompile
     end
 
     def prettify_html
-
+      html_files_to_prettify.each do |file_name|
+        xsl = Nokogiri::XSLT(XSL)
+        xml = Nokogiri(File.open(file_name))
+        File.open(file_name, 'w') do |f|
+          f.write xsl.apply_to(xml).to_s
+        end
+      end
     end
 
     def prettify_css
@@ -110,11 +156,11 @@ module RCompile
   private
 
     def html_files_to_prettify
-      FileList[ "./#{options[:release_dir]}{,/*/**}/*.html" ].sort.map(&:shellescape)
+      Dir[ "#{options[:release_dir]}/**/*.html" ].sort.map(&:shellescape)
     end
 
     def css_files_to_prettify
-      FileList[ "./#{options[:release_dir]}{,/*/**}/*.css" ].sort.map(&:shellescape)
+      Dir[ "#{options[:release_dir]}/**/*.css" ].sort.map(&:shellescape)
     end
   end
 end
