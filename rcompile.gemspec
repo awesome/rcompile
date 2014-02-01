@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = RCompile::VERSION
   spec.authors       = ["Mikael Henriksson"]
   spec.email         = ["mikael@zoolutions.se"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{This gem contains a little helper to compile an entire rails app into pure html/css}
+  spec.description   = %q{}
   spec.homepage      = ""
   spec.license       = "MIT"
 
