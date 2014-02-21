@@ -131,7 +131,7 @@ module RCompile
     end
 
     def download_html
-      exec 'wget -H -r -l 10 -k -p -D localhost -P html -nH localhost:3311'
+      exec 'wget -H -E -r -l 10 -k -K -m -p -np --restrict-file-names=nocontrol -D localhost -P html -nH localhost:3311'
     end
 
     def prettify
@@ -150,7 +150,13 @@ module RCompile
     end
 
     def prettify_css
-
+      css_files_to_prettify.each do |file_name|
+        text = File.open(file_name) { |f| f.read }
+        engine = Sass::Engine.new(text, syntax: :scss, style: :compress)
+        text = engine.render
+        engine = Sass::Engine.new(text, syntax: :scss, style: :compact)
+        File.open(file_name, 'w') { |f| f.puts engine.render  }
+      end
     end
 
   private
